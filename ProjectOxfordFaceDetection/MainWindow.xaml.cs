@@ -32,23 +32,21 @@ namespace ProjectOxfordFaceDetection
 
         private async void BrowseButton_Click(object sender, RoutedEventArgs e)
         {
-            var openDlg = new Microsoft.Win32.OpenFileDialog();
-
-            openDlg.Filter = "JPEG Image(*.jpg)|*.jpg";
-            bool? result = openDlg.ShowDialog(this);
-
-            if (!(bool)result)
-                return;
+            String searchFolder = @"C:\TestImageFolder";
+            var filters = new String[] { "jpg", "jpeg", "png", "gif", "tiff", "bmp" };
+            var files = GetFilesFromDirectory(searchFolder, filters, false);
             
-            string filePath = openDlg.FileName;
+            int numberOfFiles = files.Length;
+            Random rnd = new Random();
+            int randomImage = rnd.Next(0, numberOfFiles);
 
-            Uri fileUri = new Uri(filePath);
+            string filePath = files[randomImage];
+            
             BitmapImage bitmapSource = new BitmapImage();
-
             bitmapSource.BeginInit();
             bitmapSource.CacheOption = BitmapCacheOption.None;
-            bitmapSource.UriSource = fileUri;
-            bitmapSource.EndInit();
+            bitmapSource.UriSource = new Uri(filePath);   
+            bitmapSource.EndInit();                     
 
             FacePhoto.Source = bitmapSource;
 
@@ -101,6 +99,17 @@ namespace ProjectOxfordFaceDetection
             {
                 return new FaceRectangle[0];
             }
+        }
+
+        public static String[] GetFilesFromDirectory(String searchFolder, String[] filters, bool isRecursive)
+        {
+            List<String> filesFound = new List<String>();
+            var searchOption = isRecursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+            foreach (var filter in filters)
+            {
+                filesFound.AddRange(Directory.GetFiles(searchFolder, String.Format("*.{0}", filter), searchOption));
+            }
+            return filesFound.ToArray();
         }
     }
 }
