@@ -32,9 +32,9 @@ namespace ProjectOxfordFaceDetection
 
         private async void BrowseButton_Click(object sender, RoutedEventArgs e)
         {
-            String searchFolder = @"C:\TestImageFolder";
+            String searchFolder = @"D:\Face Detection Databases\BioID";
             var filters = new String[] { "jpg", "jpeg", "png", "gif", "tiff", "bmp" };
-            var files = GetFilesFromDirectory(searchFolder, filters, false);
+            var files = GetFilesFromDirectory(searchFolder, filters, true);
             
             int numberOfFiles = files.Length;
             Random rnd = new Random();
@@ -54,6 +54,11 @@ namespace ProjectOxfordFaceDetection
             FaceRectangle[] faceRects = await UploadAndDetectFaces(filePath);
             Title = String.Format("Detection Finished. {0} face(s) detected", faceRects.Length);
 
+            drawFaceOnImage(bitmapSource, faceRects);
+        }
+
+        public void drawFaceOnImage(BitmapImage bitmapSource, FaceRectangle[] faceRects)
+        {
             if (faceRects.Length > 0)
             {
                 DrawingVisual visual = new DrawingVisual();
@@ -110,6 +115,6 @@ namespace ProjectOxfordFaceDetection
                 filesFound.AddRange(Directory.GetFiles(searchFolder, String.Format("*.{0}", filter), searchOption));
             }
             return filesFound.ToArray();
-        }
+        }        
     }
 }
