@@ -8,13 +8,27 @@ using System.Windows;
 using Microsoft.ProjectOxford.Face;
 using Microsoft.ProjectOxford.Face.Contract;
 using System.IO;
+using System.Threading;
 
 namespace LoadTestFaceAPI
 {
+    public static class Constants
+    {
+        public static string FACE_API_KEY 
+        {
+            get { return "#############################"; } 
+        }
+
+        public static string ImageDirectory
+        {
+            get { return @"D:\Face Detection Databases\BioID"; } 
+        }
+    }
+
     [TestClass]
     public class UnitTest1
-    {   
-        private readonly IFaceServiceClient faceServiceClient = new FaceServiceClient("########################");
+    {
+        private readonly IFaceServiceClient faceServiceClient = new FaceServiceClient(Constants.FACE_API_KEY);
 
         public TestContext TestContext
         {
@@ -26,29 +40,36 @@ namespace LoadTestFaceAPI
         [TestMethod]
         public async Task TestFaceDetection()
         {
-
             this.context = TestContext;
-            String searchFolder = @"D:\Face Detection Databases\ORL";
+
+            //Extract all image files' location from a given folder
+            String searchFolder = Constants.ImageDirectory;
             var filters = new String[] { "jpg", "jpeg", "png", "gif", "tiff", "bmp" };
             var files = GetFilesFromDirectory(searchFolder, filters, true);
-
             int numberOfFiles = files.Length;
+
+            //Return a random image location 
             Random rnd = new Random();
             int randomImage = rnd.Next(0, numberOfFiles);
-
             string filePath = files[randomImage];
 
-            if (context.Properties.Contains("$LoadTestUserContext")) //running as load test
+            if (context.Properties.Contains("$LoadTestUserContext")) //Begin timing load test
                 context.BeginTimer("MyTimerFaceDetection");
             
-            FaceRectangle[] faceRects = await UploadAndDetectFaces(filePath);
-
-            if (context.Properties.Contains("$LoadTestUserContext")) //running as load test
+            //Detect faces in the selected image
+            FaceRectangle[] faceRects = { }; //await UploadAndDetectFaces(filePath);
+            Task.Run(async () =>
+            {
+                faceRects = await UploadAndDetectFaces(filePath);
+            }).GetAwaiter().GetResult();
+                                     
+            if (context.Properties.Contains("$LoadTestUserContext")) //End timing load test
                 context.EndTimer("MyTimerFaceDetection");
 
-            Assert.IsTrue(faceRects.Length >= 0);
+            Assert.IsTrue(faceRects.Length > 0);
         }
 
+        // Method returns an array of file locations present in the searchFolder location
         public static String[] GetFilesFromDirectory(String searchFolder, String[] filters, bool isRecursive)
         {
             List<String> filesFound = new List<String>();
@@ -60,13 +81,14 @@ namespace LoadTestFaceAPI
             return filesFound.ToArray();
         }
 
+        // Face detection procedure that uploads images and retuns face positions 
         private async Task<FaceRectangle[]> UploadAndDetectFaces(string imageFilePath)
         {
             try
             {
                 using (Stream imageFileStream = File.OpenRead(imageFilePath))
                 {
-                    var faces = await faceServiceClient.DetectAsync(imageFileStream);
+                    var faces = await faceServiceClient.DetectAsync(imageFileStream);                    
                     var faceRects = faces.Select(face => face.FaceRectangle);
                     return faceRects.ToArray();
                 }
