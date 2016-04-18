@@ -12,16 +12,17 @@ using System.Threading;
 
 namespace LoadTestFaceAPI
 {
+    //Class for constants
     public static class Constants
     {
         public static string FACE_API_KEY 
         {
-            get { return "#############################"; } 
+            get { return "#############################"; } //Replace with your Subscription Key
         }
 
         public static string ImageDirectory
         {
-            get { return @"D:\Face Detection Databases\BioID"; } 
+            get { return @"D:\Face Detection Databases\CaltechFaces"; } //Replace with the directory containing images.
         }
     }
 
@@ -57,16 +58,16 @@ namespace LoadTestFaceAPI
                 context.BeginTimer("MyTimerFaceDetection");
             
             //Detect faces in the selected image
-            FaceRectangle[] faceRects = { }; //await UploadAndDetectFaces(filePath);
+            FaceRectangle[] faceRects = { };
             Task.Run(async () =>
             {
                 faceRects = await UploadAndDetectFaces(filePath);
-            }).GetAwaiter().GetResult();
-                                     
+            }).GetAwaiter().GetResult();             
+                        
             if (context.Properties.Contains("$LoadTestUserContext")) //End timing load test
                 context.EndTimer("MyTimerFaceDetection");
 
-            Assert.IsTrue(faceRects.Length > 0);
+            Assert.IsTrue(faceRects.Length > 0); //Since all images contain detectable frontal faces
         }
 
         // Method returns an array of file locations present in the searchFolder location

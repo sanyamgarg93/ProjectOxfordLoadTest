@@ -23,7 +23,7 @@ namespace ProjectOxfordFaceDetection
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly IFaceServiceClient faceServiceClient = new FaceServiceClient("###########################");
+        private readonly IFaceServiceClient faceServiceClient = new FaceServiceClient("22e501a9395f48728021aafa6db7efa0"); /* Replace with your own registration key*/
 
         public MainWindow()
         {
@@ -32,16 +32,25 @@ namespace ProjectOxfordFaceDetection
 
         private async void BrowseButton_Click(object sender, RoutedEventArgs e)
         {
-            String searchFolder = @"D:\Face Detection Databases\BioID";
+            /*
+            Enter the directory that contains the images in the formats mentioned in the filters array.  
+            */
+            String searchFolder = @"D:\Face Detection Databases\CaltechFaces";
             var filters = new String[] { "jpg", "jpeg", "png", "gif", "tiff", "bmp" };
             var files = GetFilesFromDirectory(searchFolder, filters, true);
             
+            /*
+            Random file is chosen from the image directory
+            */
             int numberOfFiles = files.Length;
             Random rnd = new Random();
             int randomImage = rnd.Next(0, numberOfFiles);
 
             string filePath = files[randomImage];
-            
+
+            /*
+            Image is rendered on the Main Window
+            */
             BitmapImage bitmapSource = new BitmapImage();
             bitmapSource.BeginInit();
             bitmapSource.CacheOption = BitmapCacheOption.None;
@@ -50,6 +59,9 @@ namespace ProjectOxfordFaceDetection
 
             FacePhoto.Source = bitmapSource;
 
+            /*
+            Face detection method is called using the input image URI
+            */
             Title = "Detecting...";
             FaceRectangle[] faceRects = await UploadAndDetectFaces(filePath);
             Title = String.Format("Detection Finished. {0} face(s) detected", faceRects.Length);
@@ -57,6 +69,9 @@ namespace ProjectOxfordFaceDetection
             drawFaceOnImage(bitmapSource, faceRects);
         }
 
+        /*
+        Method for drawing and displaying rectangles on the input image
+        */
         public void drawFaceOnImage(BitmapImage bitmapSource, FaceRectangle[] faceRects)
         {
             if (faceRects.Length > 0)
@@ -89,6 +104,11 @@ namespace ProjectOxfordFaceDetection
             }
         }
 
+        /*
+        The method descibes how to call the Face detection API of project oxford. The DetectAsync method takes 
+        a stream of image pixel buffer as its argument and returns an array of face rectanges. 
+        Code documentation: https://www.microsoft.com/cognitive-services/en-us/face-api/documentation/Face-API-How-to-Topics/HowtoDetectFacesinImage
+        */
         private async Task<FaceRectangle[]> UploadAndDetectFaces(string imageFilePath)
         {
             try
@@ -106,6 +126,9 @@ namespace ProjectOxfordFaceDetection
             }
         }
 
+        /*
+        Method for storing the URIs of all images in a string array present in the searchFolder directory.
+        */
         public static String[] GetFilesFromDirectory(String searchFolder, String[] filters, bool isRecursive)
         {
             List<String> filesFound = new List<String>();
